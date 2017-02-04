@@ -1,0 +1,2 @@
+lifxlan==0.4.0
+APScheduler==3.2.0
