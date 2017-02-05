@@ -16,8 +16,6 @@ import yaml
 
 def main():
     try:
-        blink_lights(config['blink_interval'], config['blink_cycles'])
-
         now = datetime.datetime.now()
         past = now - datetime.timedelta(seconds=config['check_interval'])
         user_id = get_user_id()
