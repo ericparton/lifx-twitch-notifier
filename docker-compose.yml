@@ -8,6 +8,7 @@ services:
     network_mode: host
     volumes:
       - ./config.yml:/opt/notify/config.yml
+      - /etc/localtime:/etc/localtime
     logging:
       driver: json-file
       options:
