@@ -81,7 +81,7 @@ def get_streams(limit=25, offset=0):
 
 
 def blink_lights(interval=0.5, num_cycles=3):
-    lan = LifxLAN(1)
+    lan = LifxLAN(config['number_of_lights'])
     original_powers = lan.get_power_all_lights()
     original_colors = lan.get_color_all_lights()
     lights = lan.get_lights()
