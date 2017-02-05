@@ -16,7 +16,7 @@ import yaml
 
 def main():
     try:
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         past = now - datetime.timedelta(seconds=config['check_interval'])
         user_id = get_user_id()
         user_follows = get_user_follows(user_id)
