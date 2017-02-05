@@ -16,8 +16,9 @@ import yaml
 
 def main():
     try:
-        now = datetime.datetime.utcnow()
-        past = now - datetime.timedelta(seconds=config['check_interval'])
+        check_interval = config['check_interval']
+        current_threshold = job.next_run_time.replace(tzinfo=None) - datetime.timedelta(seconds=check_interval)
+        past_threshold = current_threshold - datetime.timedelta(seconds=check_interval)
         user_id = get_user_id()
         user_follows = get_user_follows(user_id)
         streams = get_streams()
@@ -28,11 +29,17 @@ def main():
             channel_notifications[follow['channel']['_id']] = follow['notifications']
 
         for stream in streams:
-            if channel_notifications[str(stream['channel']['_id'])]:
+            channel = stream['channel']
+            if channel_notifications[str(channel['_id'])]:
                 created_at = datetime.datetime.strptime(stream['created_at'], "%Y-%m-%dT%H:%M:%SZ")
-                if past < created_at < now:
+                logging.info('{0} has been streaming since {1}'.format(channel['display_name'], created_at))
+                logging.info('Comparing: {0} < {1} < {2}'.format(past_threshold, created_at, current_threshold))
+                if past_threshold < created_at < current_threshold:
+                    logging.info('Stream start time within thresholds. Blinking lights...')
                     blink_lights(config['blink_interval'], config['blink_cycles'])
                     return
+                else:
+                    logging.info('Stream start time not within thresholds. Ignoring...')
     except URLError as u:
         logging.error('Unable to retrieve information from twitch. Reason: "{0}"'.format(str(u)))
     except WorkflowException as w:
@@ -116,7 +123,7 @@ logging.config.fileConfig('logging.conf')
 signal.signal(signal.SIGTERM, shutdown)
 
 scheduler = BlockingScheduler()
-scheduler.add_job(main, 'interval', seconds=config['check_interval'])
+job = scheduler.add_job(main, 'interval', seconds=config['check_interval'])
 
 try:
     scheduler.start()
