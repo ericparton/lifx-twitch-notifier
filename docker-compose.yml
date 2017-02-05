@@ -1,7 +1,8 @@
 version: '2'
 
+#TODO: rebuild when docker-compose supports dashes in project name
 services:
-  python:
+  python_scheduler:
     build: .
     restart: always
     network_mode: host

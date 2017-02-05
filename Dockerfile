@@ -20,8 +20,9 @@ WORKDIR $home
 COPY ./requirements.txt $home
 RUN pip install -r requirements.txt
 
+COPY ./logging.conf $home
 COPY ./notify.py $home
 RUN chown -R $user:$group .
 
 USER $user
-CMD python notify.py
+CMD ["python", "-u", "notify.py"]
