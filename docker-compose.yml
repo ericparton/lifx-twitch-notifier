@@ -10,7 +10,7 @@ services:
       - ./config.yml:/opt/notify/config.yml
       - /etc/localtime:/etc/localtime
     logging:
-      driver: json-file
+      driver: "json-file"
       options:
-        max-size: 10m
-        max-file: 3
+        max-size: "10m"
+        max-file: "3"
