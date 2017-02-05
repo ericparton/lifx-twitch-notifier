@@ -36,7 +36,6 @@ def main():
             channel_notifications[follow['channel']['_id']] = follow['notifications']
 
         for stream in streams:
-            blink_lights()
             if channel_notifications[str(stream['channel']['_id'])]:
                 created_at = datetime.datetime.strptime(stream['created_at'], "%Y-%m-%dT%H:%M:%SZ")
                 if past < created_at < now:
