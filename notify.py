@@ -10,36 +10,39 @@ import json
 import logging.config
 import logging
 import urllib
-import datetime
 import yaml
 
 
 def main():
+    global streams_notified_on
     try:
-        check_interval = config['check_interval']
-        current_threshold = job.next_run_time.replace(tzinfo=None) - datetime.timedelta(seconds=check_interval)
-        past_threshold = current_threshold - datetime.timedelta(seconds=check_interval)
         user_id = get_user_id()
         user_follows = get_user_follows(user_id)
         streams = get_streams()
+        notify = False
 
-        channel_notifications = {}
+        channels_to_notify_on = {}
 
         for follow in user_follows:
-            channel_notifications[follow['channel']['_id']] = follow['notifications']
+            channels_to_notify_on[follow['channel']['_id']] = follow['notifications']
+
+        streams_to_notify_on = {}
 
         for stream in streams:
-            channel = stream['channel']
-            if channel_notifications[str(channel['_id'])]:
-                created_at = datetime.datetime.strptime(stream['created_at'], "%Y-%m-%dT%H:%M:%SZ")
-                logging.info('{0} has been streaming since {1}'.format(channel['display_name'], created_at))
-                logging.info('Comparing: {0} < {1} < {2}'.format(past_threshold, created_at, current_threshold))
-                if past_threshold < created_at < current_threshold:
-                    logging.info('Stream start time within thresholds. Blinking lights...')
-                    blink_lights(config['blink_interval'], config['blink_cycles'])
-                    return
-                else:
-                    logging.info('Stream start time not within thresholds. Ignoring...')
+            if channels_to_notify_on[str(stream['channel']['_id'])]:
+                streams_to_notify_on[stream['_id']] = stream
+
+        for stream_id, stream in streams_to_notify_on.iteritems():
+            if stream_id not in streams_notified_on:
+                display_name = stream['channel']['display_name']
+                logging.info('{0} is now streaming. Scheduling notification'.format(display_name))
+                notify = True
+
+        if notify:
+            blink_lights(config['blink_interval'], config['blink_cycles'])
+
+        streams_notified_on = streams_to_notify_on
+
     except URLError as u:
         logging.error('Unable to retrieve information from twitch. Reason: "{0}"'.format(str(u)))
     except WorkflowException as w:
@@ -86,6 +89,7 @@ def get_streams(limit=25, offset=0):
 
 
 def blink_lights(interval=0.5, num_cycles=3):
+    logging.info('Blinking lights')
     lan = LifxLAN(config['number_of_lights'])
     original_powers = lan.get_power_all_lights()
     original_colors = lan.get_color_all_lights()
@@ -115,6 +119,8 @@ def blink_lights(interval=0.5, num_cycles=3):
 def shutdown(signum=None, frame=None):
     scheduler.shutdown()
 
+
+streams_notified_on = {}
 
 config = yaml.load(file('config.yml', 'r'))
 
