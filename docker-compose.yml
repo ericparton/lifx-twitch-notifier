@@ -2,8 +2,10 @@ version: '2'
 
 #TODO: rebuild when docker-compose supports dashes in project name
 services:
-  python_scheduler:
+  lifx-twitch-notifier:
+    container_name: lifx-twitch-notifier
     build: .
+    image: lifx-twitch-notifer
     restart: always
     network_mode: host
     volumes:
